@@ -5,13 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Subscribe to Shortcut to Results | Taneil Currie</title>
 <meta name="description" content="Shortcut to Results is practical, honest writing on marketing, brand and content from Taneil Currie. Join 5,000+ readers.">
-<link rel="canonical" href="https://taneilcurrie.com/subscribe.html">
+<link rel="canonical" href="https://subscribe.taneilcurrie.com/">
 <link rel="icon" type="image/png" href="/favicon.png">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Taneil Currie">
 <meta property="og:title" content="Subscribe to Shortcut to Results">
 <meta property="og:description" content="Practical, honest writing on marketing, brand and content, for people building something worth trusting.">
-<meta property="og:url" content="https://taneilcurrie.com/subscribe.html">
+<meta property="og:url" content="https://subscribe.taneilcurrie.com/">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Subscribe to Shortcut to Results">
 <meta name="twitter:description" content="Practical, honest writing on marketing, brand and content, for people building something worth trusting.">
@@ -82,6 +82,9 @@ h1.title{font-family:"Special Elite",monospace;font-weight:400;font-size:clamp(2
 .form input[type=email]::placeholder{color:#6b7a8d}
 .form .btn{width:100%;margin-top:.9rem;border:0;cursor:pointer;font-family:inherit;text-align:center;padding:.9rem 1.2rem;font-size:1.1rem}
 .note{font-family:"Caveat",cursive;font-size:1.35rem;margin:.9rem 0 0;color:var(--ink);text-align:center}
+.msg{font-family:"Caveat",cursive;font-size:1.45rem;margin:.8rem 0 0;text-align:center;min-height:1.6rem}
+.msg.ok{color:var(--link)}.msg.err{color:var(--accent)}
+.form.done form label,.form.done form input,.form.done form .btn{display:none}
 .slips{grid-column:1 / -1;margin-top:.8rem}
 .slips h2{font-family:"Caveat",cursive;font-weight:500;font-size:1.9rem;color:var(--link);margin:0 0 1.6rem}
 .slipgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2rem 1.6rem}
@@ -97,7 +100,7 @@ h1.title{font-family:"Special Elite",monospace;font-weight:400;font-size:clamp(2
 <body>
 <div class="pad"><div class="wrap">
   <header class="top">
-    <a class="name" href="/">Taneil Currie</a>
+    <a class="name" href="https://taneilcurrie.com">Taneil Currie</a>
     <nav class="nav" aria-label="Primary">
       <a href="https://blog.taneilcurrie.com">Read online</a>
       <a href="https://resources.taneilcurrie.com">AI tools</a>
@@ -114,13 +117,14 @@ h1.title{font-family:"Special Elite",monospace;font-weight:400;font-size:clamp(2
     <section class="card form" aria-labelledby="fh">
       <p class="label">Get the next one</p>
       <h2 id="fh">Join the list</h2>
-      <!-- Simple version: sends the email to the Beehiiv subscribe page. To keep people on this page instead, replace this form with your Beehiiv embed (Beehiiv > Grow > Subscribe forms > Embed). -->
-      <form action="https://blog.taneilcurrie.com/subscribe" method="get" target="_blank">
+      <form id="sub" novalidate>
         <label for="em">Email address</label>
         <input id="em" type="email" name="email" placeholder="you@example.com" autocomplete="email" required>
-        <button class="btn" type="submit">Subscribe</button>
+        <input type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0">
+        <button class="btn" id="go" type="submit">Subscribe</button>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
       </form>
-      <p class="note">Unsubscribe any time.</p>
+      <p class="note" id="note">Unsubscribe any time.</p>
     </section>
 
     <section class="slips" aria-labelledby="sh">
@@ -135,5 +139,36 @@ h1.title{font-family:"Special Elite",monospace;font-weight:400;font-size:clamp(2
   </main>
 
 </div></div>
+<script>
+/* Klaviyo setup: replace the two values below. */
+var KLAVIYO_COMPANY_ID = "WpibQH";
+var KLAVIYO_LIST_ID    = "Vp44HK";
+
+(function(){
+  var f=document.getElementById('sub'),em=document.getElementById('em'),go=document.getElementById('go'),msg=document.getElementById('msg');
+  f.addEventListener('submit',function(e){
+    e.preventDefault();
+    msg.className='msg';msg.textContent='';
+    if(f.company.value){return;}
+    var v=em.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)){msg.className='msg err';msg.textContent='Please enter a valid email address.';em.focus();return;}
+    go.disabled=true;go.textContent='Subscribing...';
+    fetch('https://a.klaviyo.com/client/subscriptions/?company_id='+encodeURIComponent(KLAVIYO_COMPANY_ID),{
+      method:'POST',
+      headers:{'Content-Type':'application/json','revision':'2024-10-15'},
+      body:JSON.stringify({data:{type:'subscription',attributes:{profile:{data:{type:'profile',attributes:{email:v}}}},relationships:{list:{data:{type:'list',id:KLAVIYO_LIST_ID}}}}})
+    }).then(function(r){
+      if(r.status===202||r.ok){
+        document.querySelector('.form').classList.add('done');
+        document.getElementById('note').style.display='none';
+        msg.className='msg ok';msg.textContent='You\u2019re on the list. Check your email to confirm.';
+      }else{throw new Error('bad');}
+    }).catch(function(){
+      go.disabled=false;go.textContent='Subscribe';
+      msg.className='msg err';msg.textContent='Something went wrong. Please try again.';
+    });
+  });
+})();
+</script>
 </body>
 </html>
